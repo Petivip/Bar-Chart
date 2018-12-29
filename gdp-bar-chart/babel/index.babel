@@ -1,0 +1,105 @@
+function chart(dataset){
+var margin={right: 60, left: 100, top: 50, bottom: 50},  
+w=800,
+h=500;
+
+  
+  
+ var minDate=dataset[0][0].substring(0,4);
+  minDate=new Date(minDate);
+  
+  var maxDate=dataset[dataset.length-1][0].substring(0, 4);
+  maxDate= new Date(maxDate);
+ 
+  
+  var minGdp=d3.min(dataset,(item)=>item[1]);
+  var maxGdp=d3.max(dataset,(item)=>item[1]);
+  
+  var xScale=d3.scaleTime()
+           .domain([minDate, maxDate])
+           .range([0,w]);
+
+  var xAxis=d3.axisBottom()
+          .scale(xScale);
+  
+  
+ var yScale=d3.scaleLinear()
+              .domain([minGdp,maxGdp])
+              .range([h,0]);
+  
+ var yAxis=d3.axisLeft()
+             .scale(yScale);
+  
+  var svgCont= d3.select(".graph")
+               .append("svg")
+              .attr("width", w + margin.left + margin.right)
+              .attr("height", h + margin.top + margin.bottom)
+              .attr("class", "graph-svg");
+  
+              
+  var xAxisGroup = svgCont.append('g')
+    .call(xAxis)
+    .attr('id', 'x-axis')
+    .attr('transform', 'translate(60, 500)')
+    .selectAll("text")
+    .attr("transform","rotate(-45)")
+    .attr("text-anchor", "end")
+   
+  var yAxisGroup = svgCont.append('g')
+    .call(yAxis)
+    .attr('id', 'y-axis')
+    .attr('transform', 'translate(60, 0)');
+  
+  var tooltip=d3.select('.graph').append('div')
+                .attr("class","tooltip")
+                .style("opacity", 0);
+  
+ function mouseoverhandler(d){
+    tooltip.style('opacity', .8)
+           .style('left' , (d3.event.pageX + 15) + 'px')
+            .style('top' , (d3.event.pageY + 15) + 'px')
+            .html('Date: ' + d[0] + '<br/>'
+                  + ' Billions: ' + d[1] + '<br/>');
+    
+};
+  
+  function mouseouthandler(d) {
+    tooltip.style('opacity', 0); 
+    
+}
+    
+  svgCont.append("text")
+    .attr("transform","rotate (-90)")
+    .attr("y",-20 )
+    .attr("x",-30)
+    .attr("dy", "2em")
+    .attr("text-anchor", "end")
+    .text("GDP(billions)") ;
+ 
+  svgCont.append("text")
+    .attr("y",h + 60 )
+    .attr("x",30) 
+    .style("fill","grey")
+    .text("For More detail:http://www.bea.gov/national/pdf/nipaguid.pdf") ;
+
+
+ d3.select('svg').selectAll("rect")
+   .data(dataset)
+   .enter()
+   .append("rect")
+   .attr("fill", "#795CB2")
+   .attr('transform', 'translate(60, 0)') 
+   .attr("x", (d,i)=>i * w/dataset.length)
+   .attr("y", (d, i)=>yScale(d[1]))
+   .attr("width",w/dataset.length)
+   .attr("height",(d,i)=>h-yScale(d[1]))
+   .on("mouseover",mouseoverhandler)
+   .on("mouseout", mouseouthandler);
+
+ }
+
+d3.json('https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/GDP-data.json',function(data){
+  var dataset=data.data;
+  chart(dataset);
+  
+})
